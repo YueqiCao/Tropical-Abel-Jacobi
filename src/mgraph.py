@@ -11,7 +11,7 @@ import numpy as np
 
 class MetricGraph(nx.Graph):
     '''
-    the metric graph class is a subclass of NetworkX.Graph
+    The metric graph class is a subclass of NetworkX.Graph.
     '''
 
     def __init__(self, *args, **kwargs):
@@ -58,8 +58,8 @@ class MetricGraph(nx.Graph):
     
     def homology_basis(self, ST):
         '''
-        compute the homology basis of the metric graph with respect to a given spanning tree
-        each edge not in the spanning tree corresponds to a unique homology cycle
+        Compute the homology basis of the metric graph with respect to a given spanning tree.
+        Each edge not in the spanning tree corresponds to a unique homology cycle.
         '''
 
         # orient the graph with respect to the spanning tree
@@ -103,6 +103,137 @@ class MetricGraph(nx.Graph):
             homology_basis.append(cycle)
 
         return homology_basis
+    
+    def cycle_edge(self, ST):
+        '''
+        Compute the cycle-edge incidence matrix with respect to a given spanning tree.
+        The (i,j)th element in the matrix indicates the coefficient of edge j in the
+        ith homology cycle. 
+        '''
+        
+        # orient the graph with respect to the spanning tree
+        D = self.tree_orientation(ST)
+
+        # compute the homology basis
+        homology_basis = self.homology_basis(ST)
+
+        # compute the cycle-edge incidence matrix
+        g = len(homology_basis)
+        edge_list = list(D.edges())
+        m = len(edge_list)
+        C = np.zeros((g,m))
+        for i in range(g):
+            cycle = homology_basis[i].edges(data=True)
+            for edge in cycle:
+                index = edge_list.index((edge[0], edge[1]))
+                C[i, index] = edge[2]["sign"]
+
+        return C
+
+    def reduced_cycle_edge(self, ST):
+        '''
+        Compute the reduced cycle-edge incidence matrix with respect to a given spanning tree.
+        The reduced version only retains the edges in the spanning tree
+        '''
+
+        # compute the homology basis
+        homology_basis = self.homology_basis(ST)
+
+        # compute the cycle-edge incidence matrix
+        g = len(homology_basis)
+        edge_list = list(ST.edges())
+        n_minus = len(edge_list)
+        C = np.zeros((g,n_minus))
+        for i in range(g):
+            cycle = homology_basis[i].edges(data=True)
+            for edge in list(cycle)[1:]: # by construction the first edge is not in ST
+                try:
+                    index = edge_list.index((edge[0], edge[1]))
+                except ValueError:
+                    index = edge_list.index((edge[1], edge[0]))
+                C[i, index] = edge[2]["sign"]
+
+        return C
+
+    def path_edge(self, ST, base_point):
+        '''
+        Compute the path-edge incidence matrix with respect to a given spanning tree and a base point.
+        The (i,j)th element in the matrix indicates the coefficient of edge j in the path from the base
+        point to the ith vertex. 
+        '''
+        
+        n = len(self.nodes())
+        m = len(self.edges())
+        Y = np.zeros((n,m))
+
+        # orient the graph with respect to the spanning tree
+        D = self.tree_orientation(ST)
+
+        # compute the path-edge incidence matrix
+        for i, u in enumerate(list(self.nodes())):
+            path = nx.shortest_path(ST, source=base_point, target=u)
+            if len(path)>0:
+                for j in range(len(path)-1):
+                    try:
+                        index = list(D.edges()).index((path[j],path[j+1]))
+                        Y[i, index] = 1
+                    except ValueError:
+                        index = list(D.edges()).index((path[j+1],path[j]))
+                        Y[i, index] = -1
+
+        return Y
+
+    def reduced_path_edge(self, ST, base_point):
+        '''
+        Compute the reduced path-edge incidence matrix with respect to a given spanning tree
+        and a base point. The reduced version only retains the edges in the spanning tree.
+        '''
+
+        n = len(self.nodes())
+        Y = np.zeros((n,n-1))
+
+        # orient the graph with respect to the spanning tree
+        D = self.tree_orientation(ST)
+        # get oriented edges for the spanning tree
+        ori_ST = []
+        for edge in ST.edges():
+            if edge in D.edges():
+                ori_ST.append(edge)
+            else:
+                ori_ST.append((edge[1],edge[0]))
+
+        # compute the path-edge incidence matrix
+        for i, u in enumerate(list(self.nodes())):
+            path = nx.shortest_path(ST, source=base_point, target=u)
+            if len(path)>0:
+                for j in range(len(path)-1):
+                    try:
+                        index = ori_ST.index((path[j],path[j+1]))
+                        Y[i, index] = 1
+                    except ValueError:
+                        index = ori_ST.index((path[j+1],path[j]))
+                        Y[i, index] = -1
+
+        return Y
+    
+    def edge_length(self):
+        '''
+        Compute the edge length matrix
+        '''
+        pass
+
+    def reduced_edge_length(self, ST):
+        '''
+        Compute the reduced edge lenth matrix with respect to a spanning tree.
+        '''
+        pass
+
+    def trop_transform(self, ST, base_point):
+        '''
+        Compute the tropical Abel--Jacobi transform with respect to a spanning tree
+        and a base point.
+        '''
+        pass
 
     def refine(self, ratio=2, method="random"):
         '''
