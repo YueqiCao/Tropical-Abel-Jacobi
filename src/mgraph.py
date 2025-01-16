@@ -16,7 +16,7 @@ class MetricGraph(nx.Graph):
 
     def __init__(self, *args, **kwargs):
         '''
-        Initialize the CustomGraph by calling the base class constructor.
+        Initialize the MetricGraph by calling the base class constructor.
         '''
         super().__init__(*args, **kwargs)
 
@@ -40,9 +40,9 @@ class MetricGraph(nx.Graph):
         D.add_nodes_from(self.nodes())
         
         # Direct the spanning tree edges away from the root
-        for edge in nx.bfs_edges(ST, source=root):
-            u, v = edge
-            D.add_edge(u, v)
+        for u, v in nx.bfs_edges(ST, source=root):
+            weight = self[u][v].get("weight")
+            D.add_edge(u, v, weight=weight)
         
         # Direct the remaining edges in G\ST
         tree_edges = set(ST.edges())
@@ -50,11 +50,59 @@ class MetricGraph(nx.Graph):
             if (u, v) not in tree_edges and (v, u) not in tree_edges:
                 # Use the relative depth in the BFS tree to decide the orientation
                 if nx.shortest_path_length(ST, source=root, target=u) < nx.shortest_path_length(ST, source=root, target=v):
-                    D.add_edge(u, v)
+                    D.add_edge(u, v, weight = self[u][v].get("weight"))
                 else:
-                    D.add_edge(v, u)
+                    D.add_edge(v, u, weight = self[u][v].get("weight"))
         
         return D
+    
+    def homology_basis(self, ST):
+        '''
+        compute the homology basis of the metric graph with respect to a given spanning tree
+        each edge not in the spanning tree corresponds to a unique homology cycle
+        '''
+
+        # orient the graph with respect to the spanning tree
+        D = self.tree_orientation(ST)
+
+        # find edges not in the spanning tree
+        tree_edges = set(ST.edges())
+        non_tree_edges = [
+            edge for edge in D.edges() 
+            if (edge[0], edge[1]) not in tree_edges and (edge[1], edge[0]) not in tree_edges
+        ]
+        
+        homology_basis = []
+
+        for edge in non_tree_edges:
+
+            # create the cycle graph
+            cycle = nx.DiGraph()
+
+            # add the non-tree edge
+            u, v = edge
+            weight = D[u][v]["weight"]
+            cycle.add_edge(u, v, weight = weight, sign = 1)
+
+            # find the path in the spanning tree between u and v
+            path = nx.shortest_path(ST, source = u, target = v)
+
+            # add edges along the path in the spanning tree
+            # "sign" indicates whether the directed edge in D 
+            # is consistent with the cycle orientation
+            for i in range(len(path)-1):
+                e = (path[i], path[i+1]) 
+                if e in D.edges():
+                    sign = -1
+                    x, y = e[0], e[1]
+                else:
+                    sign = 1
+                    x, y = e[1], e[0]
+                cycle.add_edge(x, y, weight = self[x][y]["weight"], sign = sign)
+
+            homology_basis.append(cycle)
+
+        return homology_basis
 
     def refine(self, ratio=2, method="random"):
         '''
@@ -65,5 +113,6 @@ class MetricGraph(nx.Graph):
     def simplify(self):
         '''
         Simplify the combinatorial model by edge contraction 
+        Multigraph case not implemented yet
         '''
         pass
