@@ -282,7 +282,56 @@ class MetricGraph(nx.Graph):
         '''
         Sample points from the tropical Abel--Jacobi transform by interpolation
         ''' 
-        pass
+
+        # orient the graph with respect to the spanning tree
+        D = self.tree_orientation(ST)
+
+        # get oriented edges for the spanning tree
+        ori_ST = []
+        for edge in ST.edges():
+            if edge in D.edges():
+                ori_ST.append(edge)
+            else:
+                ori_ST.append((edge[1],edge[0]))
+
+        # new matrix for the interpolated points        
+        V_new = V
+
+        # interpolate points in edges in the spanning tree
+        for edge in ori_ST:
+            u, v = edge
+            j_ini = list(self.nodes()).index(u)
+            x = V[:,j_ini].reshape(-1,1)
+            j_ter = list(self.nodes()).index(v)
+            y = V[:,j_ter].reshape(-1,1)
+            if method == "equidistant":
+                for i in range(1, ratio+1):
+                    V_new = np.hstack((V_new, (1-i/(ratio+1))*x + i/(ratio+1)*y))
+            elif method == "random":
+                for i in range(1, ratio+1):
+                    theta = np.random.rand()
+                    V_new = np.hstack((V_new, theta*x + (1-theta)*y))
+        
+        # interpolate points in edges not in the spanning tree
+        homology_basis = self.homology_basis(ST)
+        g = len(homology_basis)
+        for i in range(g):
+            cycle = homology_basis[i]
+            edge = list(cycle.edges(data=True))[0]
+            u = edge[0]
+            w = np.zeros((g,1))
+            w[i] = edge[2]["weight"]
+            j_ini = list(self.nodes()).index(u)
+            x = V[:,j_ini].reshape(-1,1)
+            if method == "equidistant":
+                for j in range(1, ratio+1):
+                    V_new = np.hstack((V_new, x + j/(ratio+1)*w))
+            elif method == "random":
+                for j in range(1, ratio+1):
+                    theta = np.random.rand()
+                    V_new = np.hstack((V_new, x + theta*w))
+        
+        return V_new
 
     def refine(self, ratio=2, method="random"):
         '''
