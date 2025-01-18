@@ -42,6 +42,7 @@ class MetricGraph(nx.Graph):
         # Direct the spanning tree edges away from the root
         for u, v in nx.bfs_edges(ST, source=root):
             weight = self[u][v].get("weight")
+            # add edges in the spanning tree
             D.add_edge(u, v, weight=weight)
         
         # Direct the remaining edges in G\ST
@@ -49,6 +50,7 @@ class MetricGraph(nx.Graph):
         for u, v in self.edges():
             if (u, v) not in tree_edges and (v, u) not in tree_edges:
                 # Use the relative depth in the BFS tree to decide the orientation
+                # add edges not in the spanning tree
                 if nx.shortest_path_length(ST, source=root, target=u) < nx.shortest_path_length(ST, source=root, target=v):
                     D.add_edge(u, v, weight = self[u][v].get("weight"))
                 else:
@@ -216,23 +218,70 @@ class MetricGraph(nx.Graph):
 
         return Y
     
-    def edge_length(self):
+    def edge_length(self, ST):
         '''
         Compute the edge length matrix
         '''
-        pass
+
+        # to ensure the edge length is sorted in a consistent way with 
+        # previous constructions of C and Y
+        D = self.tree_orientation(ST)
+
+        weight_list = []
+        for edge in D.edges(data=True):
+            weight_list.append(edge[2]["weight"])
+        
+        return np.diag(np.array(weight_list))
+        
 
     def reduced_edge_length(self, ST):
         '''
         Compute the reduced edge lenth matrix with respect to a spanning tree.
         '''
-        pass
+        
+        weight_list = []
+        for edge in ST.edges(data=True):
+            weight_list.append(edge[2]["weight"])
+
+        return np.diag(np.array(weight_list))
 
     def trop_transform(self, ST, base_point):
         '''
         Compute the tropical Abel--Jacobi transform with respect to a spanning tree
         and a base point.
         '''
+        
+        C_st = self.reduced_cycle_edge(ST)
+        L_st = self.reduced_edge_length(ST)
+        Y_st = self.reduced_path_edge(ST, base_point)
+
+        return C_st @ L_st @ Y_st.T
+    
+    def trop_polarization(self, ST):
+        '''
+        Compute the tropical polarization matrix, which is also the matrix of lattice basis 
+        '''
+
+        # construct edge length matric for edges not in the spanning tree
+        L_g_list = []
+        homology_basis = self.homology_basis(ST)
+        for cycle in homology_basis:
+            edges = list(cycle.edges(data=True))
+            L_g_list.append(edges[0][2]["weight"])
+
+        L_g = np.diag(np.array(L_g_list))
+        
+        # compute the tropical polarization matrix
+        C_st = self.reduced_cycle_edge(ST)
+        L_st = self.reduced_edge_length(ST)
+        Q = C_st @ L_st @ C_st.T + L_g 
+
+        return Q
+    
+    def interpolate(self, ST, V, ratio, method="equidistant"):
+        '''
+        Sample points from the tropical Abel--Jacobi transform by interpolation
+        ''' 
         pass
 
     def refine(self, ratio=2, method="random"):
