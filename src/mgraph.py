@@ -333,15 +333,94 @@ class MetricGraph(nx.Graph):
         
         return V_new
 
-    def refine(self, ratio=2, method="random"):
+    def edge_subdivision(self, ratio=1):
         '''
         Refine the combinatorial model by edge subdivision
         '''
-        pass
 
-    def simplify(self):
+        # Create a list to hold new edges and nodes
+        new_nodes = []
+        new_edges = []
+        remove_edges = []
+        
+        # Process each edge in the graph
+        for edge in self.edges(data=True):  
+            u, v = edge[0], edge[1]
+            weight = edge[2]["weight"]  
+            
+            # Compute the weight of each sub-edge
+            sub_edge_weight = weight / (ratio + 1)
+            
+            # Create new vertices along the edge
+            interior_vertices = [f"{u}-{v}-{i}" for i in range(1, ratio + 1)]
+            
+            # Add the new vertices and edges
+            previous_vertex = u
+            for new_vertex in interior_vertices:
+                new_nodes.append(new_vertex)  # Add the new vertex
+                new_edges.append((previous_vertex, new_vertex, sub_edge_weight))  # Add edge to new vertex
+                previous_vertex = new_vertex
+            
+            # Add the final edge to v
+            new_edges.append((previous_vertex, v, sub_edge_weight))
+            
+            # Remove the original edge
+            remove_edges.append(edge)
+        
+        # Add new vertices and edges to the graph
+        self.add_nodes_from(new_nodes)
+        self.add_weighted_edges_from(new_edges)
+        self.remove_edges_from(remove_edges)
+
+    def remove_bridges(self):
         '''
-        Simplify the combinatorial model by edge contraction 
-        Multigraph case not implemented yet
+        Contract bridges from the graph
         '''
-        pass
+
+        bridges = list(nx.bridges(self))
+
+        while bridges != []:
+            for u, v in bridges:
+                self.remove_edge(u,v)
+                # Contract the bridge edge by merging u and v into a single node
+                # Map all neighbours of v to u, preserving edge weights
+                for neighbour in list(self.neighbors(v)):
+                    self.add_edge(u, neighbour, weight=self[v][neighbour]["weight"])
+                    self.remove_edge(v, neighbour)
+                    if (v, neighbour) in bridges:
+                        bridges.remove((v, neighbour))
+                self.remove_node(v)
+            bridges = list(nx.bridges(self))
+
+    def remove_interior_nodes(self):
+        '''
+        Simplify the combinatorial model by remove interior nodes
+        '''
+
+        # list of vertices to process
+        remove_nodes = [node for node in self.nodes() if self.degree[node] == 2]
+
+        for node in remove_nodes:
+            # skip nodes with self-loops (special case)
+            if self.has_edge(node, node):
+                continue
+            
+            # get the neighbours of the node
+            neighbours = list(self.neighbors(node))
+            if len(neighbours) != 2:
+                continue
+            
+            # extract the two neighbours and the weights of the edges
+            u, v = neighbours
+            weight1 = self[u][node]["weight"]
+            weight2 = self[node][v]["weight"]
+            
+            if self.has_edge(u, v):
+                continue
+            else:
+                # Remove the node and its edges
+                self.remove_node(node)
+                
+                # Add a new edge between the two neighbours, summing the weights
+                new_weight = weight1 + weight2
+                self.add_edge(u, v, weight=new_weight)
