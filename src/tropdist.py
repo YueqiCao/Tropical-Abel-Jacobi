@@ -37,7 +37,7 @@ def generate_random_graph(n, max_edges=None):
     
     return G
 
-def LLL_reduced_lattice(lattice, scale=100):
+def LLL_reduced_lattice(lattice, scale=1e6):
     '''
     Compute the reduced lattice basis using LLL algorithm.
     
@@ -47,11 +47,54 @@ def LLL_reduced_lattice(lattice, scale=100):
     '''
     # fpylll requires IntegerMatrix type
     # in fpylll, the lattice vectors are row vectors
-    lattice_adjusted = (scale * lattice.T).astype(int)
+    lattice_adjusted = np.round(scale * lattice.T).astype(int)
     A = fp.IntegerMatrix.from_matrix(lattice_adjusted)
     A_LLL = fp.LLL.reduction(A)
     lattice_reduced = np.array(list(A_LLL)).T/scale # transpose back
     return A_LLL, lattice_reduced
+
+def to_L2(V, Q):
+    '''
+    Transform the tropical Jacobian to a standard flat torus with the L2 metric.
+    Parameters:
+    V: np.array, the tropical transform of a metric graph
+    Q: np.array, the tropical polarization matrix
+    '''
+    # compute the eigenvalue decomposition of the tropical polarization matrix
+    # note that np.linalg.eigh only works for symmetric matrices
+    eigval, eigvec = np.linalg.eigh(Q)
+    Q_sqrt = eigvec @ np.diag(np.sqrt(eigval)) @ eigvec.T
+    Q_sqrt_inv = eigvec @ np.diag(1.0/np.sqrt(eigval)) @ eigvec.T
+
+    # the transformation is given by Q^{-1/2} V
+    V_transformed = Q_sqrt_inv @ V
+
+    return V_transformed, Q_sqrt
+
+def exact_L2_distance(V_transformed, Q_sqrt, scale=1e6):
+    '''
+    compute the exact distance matrix in a flat torus with the L2 metric.
+    Parameters:
+    V_transformed: vectors in a flat torus with the L2 metric
+    Q_sqrt: the square root of the tropical polarization matrix
+    scale: int, the scaling factor for the lattice basis in fpylll
+    '''
+
+    # compute the LLL-reduced lattice basis
+    Q_scaled = LLL_reduced_lattice(Q_sqrt, scale)[0]
+
+    # compute the distance matrix
+    n = V_transformed.shape[1]
+    D = np.zeros((n,n))
+    for i in range(n):
+        for j in range(i+1, n):
+            # Convert target vector to integer coordinates
+            target_scaled = np.round((V_transformed[:,i] - V_transformed[:,j]) * scale).astype(int)
+            cv = fp.CVP.closest_vector(Q_scaled, target_scaled)
+            D[i,j] = np.linalg.norm(target_scaled-np.array(cv))/scale
+            D[j,i] = D[i,j]
+    
+    return D
 
 def draw_lattice_2D(lattice, ax):
     '''
