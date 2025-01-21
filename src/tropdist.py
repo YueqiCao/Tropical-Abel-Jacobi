@@ -88,13 +88,144 @@ def exact_L2_distance(V_transformed, Q_sqrt, scale=1e6):
     D = np.zeros((n,n))
     for i in range(n):
         for j in range(i+1, n):
-            # Convert target vector to integer coordinates
-            target_scaled = np.round((V_transformed[:,i] - V_transformed[:,j]) * scale).astype(int)
-            cv = fp.CVP.closest_vector(Q_scaled, target_scaled)
+            # Convert target vector to integer coordinates. float64 is not supported!
+            target_scaled = np.round((V_transformed[:,i] - V_transformed[:,j]) * scale).astype("int")
+            cv = fp.CVP.closest_vector(Q_scaled, target_scaled) # cv is a tuple!
             D[i,j] = np.linalg.norm(target_scaled-np.array(cv))/scale
             D[j,i] = D[i,j]
     
     return D
+
+def babai_rounding(V_transformed, Q_sqrt_LLL):
+    '''
+    compute the approximate distance matrix using Babai's rounding algorithm.
+    Parameters:
+    V_transformed: vectors in a flat torus with the L2 metric
+    Q_sqrt_LLL: the LLL-reduced square root of the tropical polarization matrix
+    '''
+
+    # compute the inverse of Q_sqrt_LLL
+    Q_inv = np.linalg.inv(Q_sqrt_LLL)
+
+    # compute the approximate distance matrix
+    n = V_transformed.shape[1]
+    D_approx = np.zeros((n,n))
+    for i in range(n):
+        for j in range(i+1, n):
+            target = V_transformed[:,i] - V_transformed[:,j]
+            int_coefficients = np.round(Q_inv @ target)
+            D_approx[i,j] = np.linalg.norm(target-Q_sqrt_LLL@int_coefficients)
+            D_approx[j,i] = D_approx[i,j]
+    
+    return D_approx
+
+def babai_nearest_plane_fpylll(V_transformed, Q_sqrt, scale=1e6):
+    '''
+    compute the approximate distance matrix using Babai's nearest plane algorithm in fpylll.
+    '''
+    
+    # compute the LLL-reduced lattice basis
+    Q_scaled = LLL_reduced_lattice(Q_sqrt, scale)[0]
+    # compute the Gram-Schmidt orthogonalization of the lattice basis
+    M = fp.GSO.Mat(Q_scaled)
+    _ = M.update_gso()
+
+    # compute the approximate distance matrix
+    n = V_transformed.shape[1]
+    D_approx = np.zeros((n,n))
+    for i in range(n):
+        for j in range(i+1, n):
+            # Convert target vector to integer coordinates
+            target_scaled = np.round((V_transformed[:,i] - V_transformed[:,j]) * scale).astype("int")
+            int_coefficients = M.babai(target_scaled.tolist()) # the coefficients are relative to Q_scaled!
+            cv = Q_scaled.multiply_left(int_coefficients)
+            D_approx[i,j] = np.linalg.norm(target_scaled-np.array(cv))/scale
+            D_approx[j,i] = D_approx[i,j]
+    
+    return D_approx
+
+
+def babai_nearest_plane_original(V_transformed, Q_sqrt_LLL):
+    '''
+    compute the approximate distance matrix using Babai's nearest plane algorithm.
+    Parameters:
+    V_transformed: vectors in a flat torus with the L2 metric
+    Q_sqrt_LLL: the LLL-reduced square root of the tropical polarization matrix
+    '''
+
+    # compute the Gram-Schmidt orthogonalization of the lattice basis
+    g = Q_sqrt_LLL.shape[1]
+    Q_GSO = Q_sqrt_LLL.copy() 
+    for i in range(g): 
+        sum = np.zeros(g)
+        # subtract projections onto previous orthogonal vectors
+        for j in range(i):
+            proj = np.dot(Q_GSO[:,i], Q_GSO[:,j]) / np.dot(Q_GSO[:,j], Q_GSO[:,j]) * Q_GSO[:,j]
+            sum += proj
+        Q_GSO[:,i] -= sum
+
+    # compute the approximate distance matrix
+    n = V_transformed.shape[1]
+    D_approx = np.zeros((n,n))
+    for i in range(n):
+        for j in range(i+1, n):
+            target = V_transformed[:,i] - V_transformed[:,j]
+            w = target
+            cv = np.zeros(g)
+            # compute the closest vector using Babai's nearest plane algorithm 
+            for k in range(g-1,-1,-1):
+                proj = np.dot(w, Q_GSO[:,k]) / np.dot(Q_GSO[:,k], Q_GSO[:,k])
+                coeff = np.round(proj)
+                cv += coeff * Q_sqrt_LLL[:,k] 
+                w = w - (proj - coeff) * Q_GSO[:,k] - coeff * Q_sqrt_LLL[:,k]
+            # compute the approximate distance
+            D_approx[i,j] = np.linalg.norm(target-cv)
+            D_approx[j,i] = D_approx[i,j]
+    
+    return D_approx
+
+def babai_nearest_plane_QR(V_transformed, Q_sqrt):
+    '''
+    compute the approximate distance matrix using Babai's nearest plane algorithm and QR decomposition.
+    '''
+
+    # compute the QR decomposition of Q_sqrt
+    Q, R = np.linalg.qr(Q_sqrt)
+    # rotate the vectors
+    V_rotated = Q.T @ V_transformed
+
+    # compute the LLL-reduction of R
+    R_LLL = LLL_reduced_lattice(R)[1]
+    # check if R_LLL is a valid upper triangular matrix
+    assert np.allclose(np.triu(R_LLL), R_LLL)
+
+    # compute the approximate distance matrix
+    g, n = V_transformed.shape
+    D_approx = np.zeros((n,n))
+    for i in range(n):
+        for j in range(i+1, n):
+            target = V_rotated[:,i] - V_rotated[:,j]
+            # compute the integral coefficients from bottom to top
+            coeff = np.zeros(g) 
+            sum = 0
+            for k in range(g-1,-1,-1):
+                for l in range(g-1,k,-1):
+                    sum += coeff[l] * R_LLL[k,l]
+                coeff[k] = np.round((target[k] - sum)/R_LLL[k,k])
+            # compute the approximate distance
+            D_approx[i,j] = np.linalg.norm(target-R_LLL@coeff)
+            D_approx[j,i] = D_approx[i,j]
+
+    return D_approx
+
+def truncate_mat(mat, threshold):
+    '''
+    Truncate the distance matrix to drop possibly wrong values.
+    '''
+
+    mat_truncated = np.where(mat > threshold, np.inf, mat)
+
+    return mat_truncated
 
 def draw_lattice_2D(lattice, ax):
     '''
