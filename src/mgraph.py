@@ -288,7 +288,13 @@ class MetricGraph(nx.Graph):
 
         # get oriented edges for the spanning tree
         ori_ST = []
+        # exclude bridges
+        bridges = list(nx.bridges(self))
         for edge in ST.edges():
+            # if the edge is a bridge, skip
+            if edge in bridges:
+                continue
+            # otherwise, add it
             if edge in D.edges():
                 ori_ST.append(edge)
             else:
