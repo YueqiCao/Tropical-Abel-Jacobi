@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 src_path = Path("../src") 
 sys.path.append(str(src_path))
+sys.path.append('~/g6k')
 
 from tropdist import *
 import numpy as np
@@ -31,4 +32,4 @@ g6k(alg="gauss")
 
 i, norm, coeffs = g6k.best_lifts()[0]
 l = int(round(norm))
-print(l)
+print(coeffs)
