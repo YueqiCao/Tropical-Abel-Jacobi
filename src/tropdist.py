@@ -9,6 +9,7 @@ import numpy as np
 import mgraph as mg
 import networkx as nx
 import fpylll as fp
+import pyomo.environ as pyo
 
 def generate_random_graph(n, max_edges=None):
     """
@@ -217,6 +218,49 @@ def babai_nearest_plane_QR(V_transformed, Q_sqrt):
             D_approx[j,i] = D_approx[i,j]
 
     return D_approx
+
+def FS_distance(C, V, Q):
+    '''
+    Compute the Foster--Zhang distance matrix using pyomo and coincbc solver.
+    Parameters:
+    C: np.array, the (full) cycle-edge incidence matrix
+    V: np.array, the tropical transform of a metric graph
+    Q: np.array, the tropical polarization matrix
+    '''
+
+    # transform vectors to the Albanese torus
+    V_transformed = np.linalg.inv(Q) @ V
+
+    # formulate the MILP problem
+    g, n = V_transformed.shape
+    m = C.shape[1]
+    dist_mat = np.zeros((n,n))
+
+    for i in range(n):
+        for j in range(i+1,n):
+            target = V_transformed[:,i] - V_transformed[:,j]
+            b = C.T @ target 
+            model = pyo.ConcreteModel()
+            # variable x is the integral coefficients
+            model.x = pyo.Var(range(g), domain=pyo.Integers)
+            # variable y is the distance
+            model.y = pyo.Var(domain=pyo.NonNegativeReals)
+            # objective is to minimize the distance
+            model.OBJ = pyo.Objective(expr = model.y)
+            model.con = pyo.ConstraintList()
+            for k in range(m):
+                expr1 = -model.y
+                expr2 = -model.y
+                for r in range(g):
+                    expr1 += C[r,k]*model.x[r]
+                    expr2 += -C[r,k]*model.x[r]
+                model.con.add(expr1<=b[k])
+                model.con.add(expr2<=-b[k])
+            result = pyo.SolverFactory("cbc").solve(model,tee=False)
+            dist_mat[i,j] = model.y.value
+            dist_mat[j,i] = dist_mat[i,j]
+
+    return dist_mat
 
 def truncate_mat(mat, threshold):
     '''
