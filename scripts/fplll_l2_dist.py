@@ -12,6 +12,7 @@ sys.path.append(str(src_path))
 
 from tropdist import *
 import numpy as np
+import pandas as pd
 import networkx as nx
 import time
 
@@ -19,15 +20,14 @@ import time
 np.random.seed(0)
 
 # set hyperparameters
-num_exp = 10 # number of experiments in one loop
-num_loops = 15 # number of loops
+num_exp = 6 # number of experiments in one loop
+num_loops = 10 # number of loops
 
 # fixed genus
 g, initial_nodes, step_nodes = 15, 20, 10
 
-time_fixg_fplll = np.zeros((num_loops, num_exp))
-
 # loop over different number of nodes
+fixg = []
 for i in range(num_loops):
     # loop over different experiments
     for j in range(num_exp):
@@ -48,13 +48,17 @@ for i in range(num_loops):
         start_time = time.time()
         dist_exact = exact_L2_distance(V_L2, Q_sqrt)
         end_time = time.time()
-        time_fixg_fplll[i, j] = end_time - start_time
+        fixg.append({"Graph Nodes": num_nodes, "Time": end_time-start_time, "Method": "fplll"})
+            
+# save DataFrame
+df = pd.DataFrame(fixg)
+df.to_csv("../data/outputs/fplll_fixg.csv", index=False)
 
 # fixed number of nodes
-num_nodes, initial_g, step_g = 100, 5, 4
-time_fixn_fplll = np.zeros((num_loops, num_exp))
+num_nodes, initial_g, step_g = 50, 5, 4
 
 # loop over different genus
+fixn = []
 for i in range(num_loops):
     # loop over different experiments
     for j in range(num_exp):
@@ -71,7 +75,8 @@ for i in range(num_loops):
         start_time = time.time()
         dist_exact = exact_L2_distance(V_L2, Q_sqrt)
         end_time = time.time()
-        time_fixn_fplll[i, j] = end_time - start_time
+        fixn.append({"Graph Genus": g, "Time": end_time-start_time, "Method": "fplll"})
 
-# save the time records
-np.savez("../data/outputs/full_l2_dist.npz", fixg_fplll=time_fixg_fplll, fixn_fplll=time_fixn_fplll)
+# save DataFrame
+df = pd.DataFrame(fixn)
+df.to_csv("../data/outputs/fplll_fixn.csv", index=False)

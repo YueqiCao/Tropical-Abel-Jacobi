@@ -219,7 +219,7 @@ def babai_nearest_plane_QR(V_transformed, Q_sqrt):
 
     return D_approx
 
-def FS_distance(C, V, Q):
+def FS_distance(C, V, Q, solver="cbc", mipgap=1e-2):
     '''
     Compute the Foster--Zhang distance matrix using pyomo and coincbc solver.
     Parameters:
@@ -243,8 +243,8 @@ def FS_distance(C, V, Q):
             model = pyo.ConcreteModel()
             # variable x is the integral coefficients
             model.x = pyo.Var(range(g), domain=pyo.Integers)
-            # variable y is the distance
-            model.y = pyo.Var(domain=pyo.NonNegativeReals)
+            # variable y is the distance, set bound for faster computation
+            model.y = pyo.Var(bounds=(0,100))
             # objective is to minimize the distance
             model.OBJ = pyo.Objective(expr = model.y)
             model.con = pyo.ConstraintList()
@@ -256,7 +256,14 @@ def FS_distance(C, V, Q):
                     expr2 += -C[r,k]*model.x[r]
                 model.con.add(expr1<=b[k])
                 model.con.add(expr2<=-b[k])
-            result = pyo.SolverFactory("cbc").solve(model,tee=False)
+            solver_instance = pyo.SolverFactory(solver)
+            if solver == "cbc":
+                solver_instance.options['ratioGap'] = mipgap
+            if solver == "ipopt":
+                solver_instance.options['acceptable_tol'] = mipgap
+            if solver == "glpk":
+                solver_instance.options['mipgap'] = mipgap
+            result = solver_instance.solve(model,tee=False)
             dist_mat[i,j] = model.y.value
             dist_mat[j,i] = dist_mat[i,j]
 
