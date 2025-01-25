@@ -265,6 +265,7 @@ def FS_distance(C, V, Q, solver="cbc", mipgap=1e-2):
                 solver_instance.options['mipgap'] = mipgap
             if solver == "scip":
                 solver_instance.options['limits/gap'] = mipgap
+                solver_instance.options['heuristics'] = 'off' # default setting takes longer time
             result = solver_instance.solve(model,tee=False)
             dist_mat[i,j] = model.y.value
             dist_mat[j,i] = dist_mat[i,j]

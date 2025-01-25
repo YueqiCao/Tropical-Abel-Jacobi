@@ -60,7 +60,7 @@ solvers = ["cbc", "ipopt", "glpk", "scip"]
 # df.to_csv("../data/outputs/fs_fixg.csv", index=False)
 
 # fixed number of nodes
-num_nodes, initial_g, step_g = 30, 10, 5
+num_nodes, initial_g, step_g = 30, 30, 5
 
 #loop over methods
 fixn = []
@@ -82,7 +82,7 @@ for i in range(num_loops):
         # record time
         for solver in solvers:
             start_time = time.time()
-            dist_FS = FS_distance(C, V, Q, solver=solver)
+            dist_FS = FS_distance(C, V, Q, solver=solver, mipgap=0.1)
             end_time = time.time()
             fixn.append({"Graph Genus": g, "Time": end_time-start_time, "Solver": solver})
 

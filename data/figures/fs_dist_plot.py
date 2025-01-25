@@ -49,13 +49,13 @@ plt.savefig("../figures/fs_dist_fixg.pdf")
 
 #####################################################################################
 
-df = pd.read_csv("../outputs/fs_fixn.csv")
+df = pd.read_csv("../outputs/fs_fixn_testh.csv")
 df["loggenus"] = np.log(df["Graph Genus"])
 df["logtime"] = np.log(df["Time"])
-df["Solver"] = df["Solver"].replace("cbc", "CBC")
-df["Solver"] = df["Solver"].replace("ipopt", "IPOPT")
-df["Solver"] = df["Solver"].replace("glpk", "GLPK")
-df["Solver"] = df["Solver"].replace("scip", "SCIP")
+# df["Solver"] = df["Solver"].replace("cbc", "CBC")
+# df["Solver"] = df["Solver"].replace("ipopt", "IPOPT")
+# df["Solver"] = df["Solver"].replace("glpk", "GLPK")
+# df["Solver"] = df["Solver"].replace("scip", "SCIP")
 
 # Plot with Seaborn
 plt.figure(figsize=(6, 6))
@@ -79,4 +79,4 @@ plt.legend(fontsize=12, title_fontsize=14)
 plt.grid(True, linestyle="--", alpha=0.6)
 plt.tight_layout()
 
-plt.savefig("../figures/fs_dist_fixn.pdf")
+plt.savefig("../figures/fs_dist_fixn_testh.pdf")
