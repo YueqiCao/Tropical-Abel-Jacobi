@@ -69,25 +69,26 @@ g, initial_nodes, step_nodes = 15, 20, 10
 
 # loop over methods
 fixg = []
-for method in methods:
-    # loop over different number of nodes
-    for i in range(num_loops):
-        # loop over different experiments
-        for j in range(num_exp):
-            # generate a random graph
-            num_nodes = initial_nodes + i * step_nodes
-            MG = generate_random_graph(num_nodes, max_edges=num_nodes+g-1)
-            # compute the tropical Abel--Jacobi transform
-            MST = nx.minimum_spanning_tree(MG)
-            base_point = list(MST.nodes())[0]
-            V0 = MG.trop_transform(MST, base_point)
-            # sample more points from the transform and drop the repeated points
-            V1 = np.unique(MG.interpolate(MST, V0, 5), axis=1)
-            # fix the number of points to be computed
-            V = V1[:, :num_nodes]
-            Q = MG.trop_polarization(MST)
-            V_L2, Q_sqrt = to_L2(V, Q)
-            # record time
+
+# loop over different number of nodes
+for i in range(num_loops):
+    # loop over different experiments
+    for j in range(num_exp):
+        # generate a random graph
+        num_nodes = initial_nodes + i * step_nodes
+        MG = generate_random_graph(num_nodes, max_edges=num_nodes+g-1)
+        # compute the tropical Abel--Jacobi transform
+        MST = nx.minimum_spanning_tree(MG)
+        base_point = list(MST.nodes())[0]
+        V0 = MG.trop_transform(MST, base_point)
+        # sample more points from the transform and drop the repeated points
+        V1 = np.unique(MG.interpolate(MST, V0, 5), axis=1)
+        # fix the number of points to be computed
+        V = V1[:, :num_nodes]
+        Q = MG.trop_polarization(MST)
+        V_L2, Q_sqrt = to_L2(V, Q)
+        # record time
+        for method in methods:
             start_time = time.time()
             dist_g6k = g6k_L2_distance(V_L2, Q_sqrt, method=method)
             end_time = time.time()
@@ -102,21 +103,22 @@ num_nodes, initial_g, step_g = 50, 5, 4
 
 #loop over methods
 fixn = []
-for method in methods:
-    # loop over different genus
-    for i in range(num_loops):
-        # loop over different experiments
-        for j in range(num_exp):
-            # generate a random graph
-            g = initial_g + i * step_g
-            MG = generate_random_graph(num_nodes, max_edges=num_nodes+g-1)
-            # compute the tropical Abel--Jacobi transform
-            MST = nx.minimum_spanning_tree(MG)
-            base_point = list(MST.nodes())[0]
-            V = MG.trop_transform(MST, base_point)
-            Q = MG.trop_polarization(MST)
-            V_L2, Q_sqrt = to_L2(V, Q)
-            # record time
+
+# loop over different genus
+for i in range(num_loops):
+    # loop over different experiments
+    for j in range(num_exp):
+        # generate a random graph
+        g = initial_g + i * step_g
+        MG = generate_random_graph(num_nodes, max_edges=num_nodes+g-1)
+        # compute the tropical Abel--Jacobi transform
+        MST = nx.minimum_spanning_tree(MG)
+        base_point = list(MST.nodes())[0]
+        V = MG.trop_transform(MST, base_point)
+        Q = MG.trop_polarization(MST)
+        V_L2, Q_sqrt = to_L2(V, Q)
+        # record time
+        for method in methods:
             start_time = time.time()
             dist_g6k = g6k_L2_distance(V_L2, Q_sqrt, method=method)
             end_time = time.time()

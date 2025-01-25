@@ -21,6 +21,7 @@ df["logtime"] = np.log(df["Time"])
 df["Solver"] = df["Solver"].replace("cbc", "CBC")
 df["Solver"] = df["Solver"].replace("ipopt", "IPOPT")
 df["Solver"] = df["Solver"].replace("glpk", "GLPK")
+df["Solver"] = df["Solver"].replace("scip", "SCIP")
 
 # Plot with Seaborn
 plt.figure(figsize=(6, 6))
@@ -54,6 +55,7 @@ df["logtime"] = np.log(df["Time"])
 df["Solver"] = df["Solver"].replace("cbc", "CBC")
 df["Solver"] = df["Solver"].replace("ipopt", "IPOPT")
 df["Solver"] = df["Solver"].replace("glpk", "GLPK")
+df["Solver"] = df["Solver"].replace("scip", "SCIP")
 
 # Plot with Seaborn
 plt.figure(figsize=(6, 6))
