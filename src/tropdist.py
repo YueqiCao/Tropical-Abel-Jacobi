@@ -105,8 +105,8 @@ def babai_rounding(V_transformed, Q_sqrt_LLL):
     Q_sqrt_LLL: the LLL-reduced square root of the tropical polarization matrix
     '''
 
-    # compute the inverse of Q_sqrt_LLL
-    Q_inv = np.linalg.inv(Q_sqrt_LLL)
+    # do NOT use inverse as it is not accurate and stable
+    # Q_inv = np.linalg.inv(Q_sqrt_LLL)
 
     # compute the approximate distance matrix
     n = V_transformed.shape[1]
@@ -114,7 +114,7 @@ def babai_rounding(V_transformed, Q_sqrt_LLL):
     for i in range(n):
         for j in range(i+1, n):
             target = V_transformed[:,i] - V_transformed[:,j]
-            int_coefficients = np.round(Q_inv @ target)
+            int_coefficients = np.round(np.linalg.solve(Q_sqrt_LLL, target))
             D_approx[i,j] = np.linalg.norm(target-Q_sqrt_LLL@int_coefficients)
             D_approx[j,i] = D_approx[i,j]
     

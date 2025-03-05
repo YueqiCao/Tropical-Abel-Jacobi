@@ -2,7 +2,7 @@
 # date: 22/01/2025
 # contact: y.cao21@imperial.ac.uk
 #
-# This script is used to test the complexity of computing the approximate tropical polarization matrix
+# This script tests the approximation error of tropical polarization matrix
 # using Babai's algorithm
 
 import sys
@@ -27,7 +27,6 @@ num_loops = 10 # number of loops
 g, initial_nodes, step_nodes = 15, 20, 10
 
 # loop over different number of nodes
-fixg = []
 errorg = []
 for i in range(num_loops):
     # loop over different experiments
@@ -48,23 +47,15 @@ for i in range(num_loops):
         Q_sqrt_check, Q_sqrt_LLL = LLL_reduced_lattice(Q_sqrt)
         
         # Babai's rounding algorithm
-        start_time = time.time()
         dist_round = babai_rounding(V_L2, Q_sqrt_LLL)
-        end_time = time.time()
-        fixg.append({"Graph Nodes": num_nodes, "Time": end_time-start_time, "Method": "rounding"})
         # Babai's nearest plane algorithm
-        start_time = time.time()
         dist_nearest = babai_nearest_plane_original(V_L2, Q_sqrt_LLL)
-        end_time = time.time()
-        fixg.append({"Graph Nodes": num_nodes, "Time": end_time-start_time, "Method": "nearest"})
         # compute approximation error
         dist_exact = exact_L2_distance(V_L2, Q_sqrt)
         errorg.append({"Graph Nodes": num_nodes, "MSE": np.linalg.norm(dist_round-dist_exact,'fro')/num_nodes**2, "Method": "rounding"})
         errorg.append({"Graph Nodes": num_nodes, "MSE": np.linalg.norm(dist_nearest-dist_exact,'fro')/num_nodes**2, "Method": "nearest"})
             
 # save DataFrame
-df = pd.DataFrame(fixg)
-df.to_csv("../data/outputs/babai_fixg.csv", index=False)
 de = pd.DataFrame(errorg)
 de.to_csv("../data/outputs/babai_errorg.csv", index=False)
 
@@ -72,7 +63,6 @@ de.to_csv("../data/outputs/babai_errorg.csv", index=False)
 num_nodes, initial_g, step_g = 50, 5, 4
 
 # loop over different genus
-fixn = []
 errorn = []
 for i in range(num_loops):
     # loop over different experiments
@@ -89,15 +79,9 @@ for i in range(num_loops):
         Q_sqrt_check, Q_sqrt_LLL = LLL_reduced_lattice(Q_sqrt)
         
         # Babai's rounding algorithm
-        start_time = time.time()
         dist_round = babai_rounding(V_L2, Q_sqrt_LLL)
-        end_time = time.time()
-        fixn.append({"Graph Genus": g, "Time": end_time-start_time, "Method": "rounding"})
         # Babai's nearest plane algorithm
-        start_time = time.time()
         dist_nearest = babai_nearest_plane_original(V_L2, Q_sqrt_LLL)
-        end_time = time.time()
-        fixn.append({"Graph Genus": g, "Time": end_time-start_time, "Method": "nearest"})
         # compute approximation error
         dist_exact = exact_L2_distance(V_L2, Q_sqrt)
         errorn.append({"Graph Genus": g, "MSE": np.linalg.norm(dist_round-dist_exact,'fro')/num_nodes**2, "Method": "rounding"})
@@ -105,7 +89,5 @@ for i in range(num_loops):
  
 
 # save DataFrame
-df = pd.DataFrame(fixn)
-df.to_csv("../data/outputs/babai_fixn.csv", index=False)
 de = pd.DataFrame(errorn)
 de.to_csv("../data/outputs/babai_errorn.csv", index=False)
