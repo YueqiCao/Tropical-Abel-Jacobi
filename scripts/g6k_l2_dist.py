@@ -2,7 +2,7 @@
 # date: 22/01/2025
 # contact: y.cao21@imperial.ac.uk
 #
-# This script is used to test the complexity of computing the full, exact tropical polarization matrix
+# This script is used to test the complexity of computing the full, exact tropical polarization distance matrix
 # using the sieving algorithm in G6K
 
 import sys
@@ -85,7 +85,7 @@ for i in range(num_loops):
         V1 = np.unique(MG.interpolate(MST, V0, 5), axis=1)
         # fix the number of points to be computed
         V = V1[:, :num_nodes]
-        Q = MG.trop_polarization(MST)
+        Q = MG.trop_period(MST)
         V_L2, Q_sqrt = to_L2(V, Q)
         # record time
         for method in methods:
@@ -115,7 +115,7 @@ for i in range(num_loops):
         MST = nx.minimum_spanning_tree(MG)
         base_point = list(MST.nodes())[0]
         V = MG.trop_transform(MST, base_point)
-        Q = MG.trop_polarization(MST)
+        Q = MG.trop_period(MST)
         V_L2, Q_sqrt = to_L2(V, Q)
         # record time
         for method in methods:

@@ -257,9 +257,9 @@ class MetricGraph(nx.Graph):
 
         return C_st @ L_st @ Y_st.T
     
-    def trop_polarization(self, ST):
+    def trop_period(self, ST):
         '''
-        Compute the tropical polarization matrix, which is also the matrix of lattice basis 
+        Compute the tropical period matrix, which is also the matrix of lattice basis 
         '''
 
         # construct edge length matric for edges not in the spanning tree
@@ -271,7 +271,7 @@ class MetricGraph(nx.Graph):
 
         L_g = np.diag(np.array(L_g_list))
         
-        # compute the tropical polarization matrix
+        # compute the tropical period matrix
         C_st = self.reduced_cycle_edge(ST)
         L_st = self.reduced_edge_length(ST)
         Q = C_st @ L_st @ C_st.T + L_g 

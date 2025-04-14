@@ -46,7 +46,7 @@ for i in range(num_loops):
         V1 = np.unique(MG.interpolate(MST, V0, 5), axis=1)
         # fix the number of points to be computed
         V = V1[:, :num_nodes]
-        Q = MG.trop_polarization(MST)
+        Q = MG.trop_period(MST)
         C = MG.cycle_edge(MST)
         # record time
         for solver in solvers:
@@ -77,7 +77,7 @@ for i in range(num_loops):
         MST = nx.minimum_spanning_tree(MG)
         base_point = list(MST.nodes())[0]
         V = MG.trop_transform(MST, base_point)
-        Q = MG.trop_polarization(MST)
+        Q = MG.trop_period(MST)
         C = MG.cycle_edge(MST)
         # record time
         for solver in solvers:

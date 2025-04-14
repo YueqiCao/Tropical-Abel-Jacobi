@@ -59,15 +59,15 @@ def to_L2(V, Q):
     Transform the tropical Jacobian to a standard flat torus with the L2 metric.
     Parameters:
     V: np.array, the tropical transform of a metric graph
-    Q: np.array, the tropical polarization matrix
+    Q: np.array, the tropical period matrix
     '''
-    # compute the eigenvalue decomposition of the tropical polarization matrix
+    # compute the eigenvalue decomposition of the tropical period matrix
     # note that np.linalg.eigh only works for symmetric matrices
     eigval, eigvec = np.linalg.eigh(Q)
     Q_sqrt = eigvec @ np.diag(np.sqrt(eigval)) @ eigvec.T
     Q_sqrt_inv = eigvec @ np.diag(1.0/np.sqrt(eigval)) @ eigvec.T
 
-    # the transformation is given by Q^{-1/2} V
+    # the transformation is given by Q^{-1/2}V
     V_transformed = Q_sqrt_inv @ V
 
     return V_transformed, Q_sqrt
@@ -77,7 +77,7 @@ def exact_L2_distance(V_transformed, Q_sqrt, scale=1e6):
     compute the exact distance matrix in a flat torus with the L2 metric.
     Parameters:
     V_transformed: vectors in a flat torus with the L2 metric
-    Q_sqrt: the square root of the tropical polarization matrix
+    Q_sqrt: the square root of the tropical period matrix
     scale: int, the scaling factor for the lattice basis in fpylll
     '''
 
@@ -102,7 +102,7 @@ def babai_rounding(V_transformed, Q_sqrt_LLL):
     compute the approximate distance matrix using Babai's rounding algorithm.
     Parameters:
     V_transformed: vectors in a flat torus with the L2 metric
-    Q_sqrt_LLL: the LLL-reduced square root of the tropical polarization matrix
+    Q_sqrt_LLL: the LLL-reduced square root of the tropical period matrix
     '''
 
     # do NOT use inverse as it is not accurate and stable
@@ -151,7 +151,7 @@ def babai_nearest_plane_original(V_transformed, Q_sqrt_LLL):
     compute the approximate distance matrix using Babai's nearest plane algorithm.
     Parameters:
     V_transformed: vectors in a flat torus with the L2 metric
-    Q_sqrt_LLL: the LLL-reduced square root of the tropical polarization matrix
+    Q_sqrt_LLL: the LLL-reduced square root of the tropical period matrix
     '''
 
     # compute the Gram-Schmidt orthogonalization of the lattice basis
@@ -225,7 +225,7 @@ def FS_distance(C, V, Q, solver="cbc", mipgap=1e-2):
     Parameters:
     C: np.array, the (full) cycle-edge incidence matrix
     V: np.array, the tropical transform of a metric graph
-    Q: np.array, the tropical polarization matrix
+    Q: np.array, the tropical period matrix
     '''
 
     # transform vectors to the Albanese torus

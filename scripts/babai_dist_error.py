@@ -2,7 +2,7 @@
 # date: 22/01/2025
 # contact: y.cao21@imperial.ac.uk
 #
-# This script tests the approximation error of tropical polarization matrix
+# This script tests the approximation error of tropical polarization distance matrix
 # using Babai's algorithm
 
 import sys
@@ -42,7 +42,7 @@ for i in range(num_loops):
         V1 = np.unique(MG.interpolate(MST, V0, 5), axis=1)
         # fix the number of points to be computed
         V = V1[:, :num_nodes]
-        Q = MG.trop_polarization(MST)
+        Q = MG.trop_period(MST)
         V_L2, Q_sqrt = to_L2(V, Q)
         Q_sqrt_check, Q_sqrt_LLL = LLL_reduced_lattice(Q_sqrt)
         
@@ -74,7 +74,7 @@ for i in range(num_loops):
         MST = nx.minimum_spanning_tree(MG)
         base_point = list(MST.nodes())[0]
         V = MG.trop_transform(MST, base_point)
-        Q = MG.trop_polarization(MST)
+        Q = MG.trop_period(MST)
         V_L2, Q_sqrt = to_L2(V, Q)
         Q_sqrt_check, Q_sqrt_LLL = LLL_reduced_lattice(Q_sqrt)
         

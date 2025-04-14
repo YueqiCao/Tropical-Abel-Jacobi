@@ -39,7 +39,7 @@ sns.lineplot(
 )
 
 # Customise the plot
-#plt.title("Time complexity of computing the full tropical polarization matrix", fontsize=14)
+#plt.title("Time complexity of computing the full tropical polarization distance matrix", fontsize=14)
 plt.xlabel("log(#Nodes)", fontsize=12)
 plt.ylabel("log(Time)", fontsize=12)
 plt.legend(fontsize=12, title_fontsize=14)
@@ -74,7 +74,7 @@ sns.lineplot(
 )
 
 # Customise the plot
-#plt.title("Time complexity of computing the full tropical polarization matrix", fontsize=14)
+#plt.title("Time complexity of computing the full tropical polarization distance matrix", fontsize=14)
 plt.xlabel("log(Genus)", fontsize=12)
 plt.ylabel("log(Time)", fontsize=12)
 plt.legend(fontsize=12, title_fontsize=14)
