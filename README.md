@@ -2,7 +2,7 @@
 
 ``TropAJ`` is a Python repository for computing the tropical Abel--Jacobi transform of a metric graph and tropical distances on its tropical Jacobian. This repository also contains source codes for experiments in the paper
 
-> [Computing the tropical Abel--Jacobi Transform and tropical distances for metric graphs](https://arxiv.org/abs/2504.11619)
+> [Computing the Tropical Abel--Jacobi Transform and Tropical Distances for Metric Graphs](https://arxiv.org/abs/2504.11619)
 
 ## Tutorial
 
@@ -38,7 +38,7 @@ The repository is organized as follows:
 You can use the following BibTex entry:
 ```
 @misc{cao2025computingtropicalabeljacobitransform,
-      title={Computing the tropical Abel--Jacobi Transform and tropical distances for metric graphs}, 
+      title={Computing the Tropical Abel--Jacobi Transform and Tropical Distances for Metric Graphs}, 
       author={Yueqi Cao and Anthea Monod},
       year={2025},
       eprint={2504.11619},
