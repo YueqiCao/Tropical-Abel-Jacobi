@@ -1,11 +1,20 @@
 # TropAJ: Tropical Abel--Jacobi Transform of Metric Graphs
 
-this repository contains code for computation of tropical Abel--Jacobi transform of metric graphs.
+``TropAJ`` is a Python repository for computing the tropical Abel--Jacobi transform of a metric graph and tropical distances on its tropical Jacobian. This repository also contains source codes for experiments in the paper
 
-You need to use WSL to install ``fpylll``.
+> [Computing the tropical Abel--Jacobi Transform and tropical distances for metric graphs](https://arxiv.org/abs/2504.11619)
 
-To compute the Foster--Zhang distance matrix. There is no need to install ``fpylll`` (no lattice reduction)
-but need to install ``pyomo`` and any solver (``coincbc``, ``gurobi``, ``cplex`` etc.).
+## Tutorial
+
+Some tutorials about the tropical Abel--Jacobi transform and this repository are included in ``notebooks``.   
+
+## Package Dependence
+
+The repository depends on several Python libraries from different scientific fields. For your purpose it is not necessary to install all of them.
+
+- The computation of tropical Abel--Jacobi transform depends on [NetworkX](https://networkx.org/); 
+- The computation of tropical polarization distance depends on [fplll](https://github.com/fplll/fplll) and [G6K](https://github.com/fplll/g6k) (not available on Windows system);
+- The computation of Foster--Zhang distance depends on [Pyomo](https://www.pyomo.org/), and any MIP solver (in the paper, [Cbc](https://github.com/coin-or/Cbc), [Ipopt](https://coin-or.github.io/Ipopt/), [GLPK](https://www.gnu.org/software/glpk/), [SCIP](https://www.scipopt.org/) are tested).
 
 ## Usage
 
@@ -28,13 +37,16 @@ The repository is organized as follows:
 ## Academic Use
 You can use the following BibTex entry:
 ```
-arXiv
+@misc{cao2025computingtropicalabeljacobitransform,
+      title={Computing the tropical Abel--Jacobi Transform and tropical distances for metric graphs}, 
+      author={Yueqi Cao and Anthea Monod},
+      year={2025},
+      eprint={2504.11619},
+      archivePrefix={arXiv},
+      primaryClass={math.AG},
+      url={https://arxiv.org/abs/2504.11619}, 
+}
 ```
-
-
-## Requirements
-
-fplll
 
 ## Contact
 
